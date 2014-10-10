@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.1.1/css/bootstrap.min.css">
+
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+
+		<script src="http://documentcloud.github.io/underscore/underscore-min.js"></script>
+
+		 <script src="http://documentcloud.github.io/backbone/backbone-min.js">
+		 </script>
+
+		<title>Cat Fifteen Puzzle</title>
+
+	</head>
+
+	<body id="bodyPage">
+		<h1>Cat Fifteen Puzzle</h1>
+
+		<div class = "login"></div>
+
+		<script type="text/template" id="home_template">
+			<button type="button"><a href="#/new" class = "new-page"> New </a></button>
+			<hr />
+
+
+			<table style="width:100%">
+			<tr>
+			    <td><b>Firstname</b></td>
+			    <td><b>Lastname</b></td> 
+			    <td><b>E-Mail</b></td>
+		    </tr>
+			<% _.each(myCollection.models, function(list){ %>
+			  <tr>
+			    <td><%= list.get('firstname') %></td> 
+			    <td><%= list.get('lastname') %></td> 
+			    <td><%= list.get('email') %></td>
+			    <td><button type="button"><a href="#/edit" class = "new-page"> Edit </a></button></td>
+			    <td><button type="button"><a href="#/delete" class = "new-page"> Delete </a></button></td>
+			  </tr>
+			  <tr>
+			<% }); %>
+			</table>
+			<hr />
+			<button type="button"><a href='cat.html'>START</a></button>
+
+		</script>
+
+		<script type="text/template" id="newUser_template">
+
+		<form class ="newUserForm" action="">
+			<legend>Create User</legend>
+			<label>First Name</label>
+			<input type="text" name="firstname" />
+			<label>Last Name</label>
+			<input type="text" name="lastname" />
+			<label>Email Address</label>
+			<input type="text" name="email" />
+			<hr />
+
+			<button type="submit" class="button">Submit</button>
+
+		</form>
+
+		</script>
+
+		<div id="home_container"></div>
+
+		<script>
+
+			$.ajaxPrefilter( function( options, originalOptions, jqXHR ) {
+			  	options.url = 'http://afternoon-cat.herokuapp.com' + options.url;
+			});
+
+			$.fn.serializeObject = function() {
+				var o = {};
+				var a = this.serializeArray();
+				$.each(a, function() {
+		        	if (o[this.name] !== undefined) {
+				    if (!o[this.name].push) {
+				        o[this.name] = [o[this.name]];
+				    }
+				        o[this.name].push(this.value || '');
+				    } else {
+				        o[this.name] = this.value || '';
+				    }
+				});
+				return o;
+			};
+
+			var userList = new Array();
+
+			var UserModel = Backbone.Model.extend({
+				defaults: {
+		            firstname: 'firstname',
+		            lastname: 'lastname',
+		            email: 'email'
+		        }
+			});
+
+			var UserCollection = Backbone.Collection.extend({
+		        UserID: UserModel
+		    });
+
+		    var person1 = new UserModel({ firstname: "Jake1", lastname: "Yang1", email:"abc1@abc.com"});
+		    var person2 = new UserModel({ firstname: "Jake2", lastname: "Yang2", email:"abc2@abc.com"});
+		    var person3 = new UserModel({ firstname: "Jake3", lastname: "Yang3", email:"abc3@abc.com"});
+
+		    var myCollection = new UserCollection();
+		    myCollection.add(person1);
+		    myCollection.add(person2);
+		    myCollection.add(person3);
+
+		    var HomeView = Backbone.View.extend({
+				el: $("#home_container"),
+		        render: function(myCollection){
+		        	// Compile the template using underscore
+		        	var template = _.template( $("#home_template").html(), myCollection );
+		    
+	        			this.$el.html( template );
+		
+		        	}
+		    });
+
+		    var NewUserView = Backbone.View.extend({
+				el: $("body"),
+		        render: function(){
+		        	// Compile the template using underscore
+		        	var template = _.template( $("#newUser_template").html(), {} );
+	        		this.$el.html( template );
+		        },
+
+
+		        events: {
+		        	'submit .newUserForm': 'saveUser'
+		        },
+
+		        saveUser: function (ev){
+		        	var userDetails = $(ev.currentTarget).serializeObject();
+		        	var user = new UserModel({ firstname: userDetails.firstname, 
+		        								lastname: userDetails.lastname, 
+		        								email: userDetails.email});
+		        	myCollection.add(user);
+
+		        	alert("Create Succussfully!");
+		        	app_router.navigate('', {trigger:true});
+		        }
+		    });
+
+			var AppRouter = Backbone.Router.extend({
+		        routes: {
+		            '': "home", 
+		            'new': 'newUser',
+		            'edit': 'editUser',
+		            'delete': 'deleteUser'
+		        }
+		    });
+
+			var homeView = new HomeView();
+
+			var newUserView = new NewUserView();
+
+		    // Initiate the router
+		    var app_router = new AppRouter();
+
+		    app_router.on('route:home', function() {
+		        //alert("we did it");
+		        homeView.render(myCollection);
+		    });
+
+		    app_router.on('route:editUser', function() {
+		        //alert("we did it");
+		        homeView.render(myCollection);
+		    });
+
+		    app_router.on('route:deleteUser', function() {
+		        //alert("we did it");
+		        homeView.render(myCollection);
+		    });
+
+		    app_router.on('route:newUser', function() {
+		        //alert("we did it");
+		        newUserView.render();
+		    });
+
+		    // Start Backbone history a necessary step for bookmarkable URL's
+		    Backbone.history.start();
+		</script>
+		
+		<div id="output"></div>
+	</body>
+</html>
